@@ -1,0 +1,20 @@
+{
+  "name": "xauusd-smc-analyzer",
+  "version": "4.0.0",
+  "description": "XAUUSD SMC Scalp Analyzer — £20 to £1000 in 24hrs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
