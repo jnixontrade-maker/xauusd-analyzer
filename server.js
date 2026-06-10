@@ -19,8 +19,11 @@ webpush.setVapidDetails(
   VAPID_PRIVATE
 );
 
-// In-memory subscription store (use Redis/DB in production)
+// In-memory subscription store
 let subscriptions = [];
+
+// Last signal posted by the tool — bot polls this
+let lastSignal = null;
 
 // ── ROUTES ──
 
@@ -74,6 +77,24 @@ app.post('/api/notify', async (req, res) => {
   const sent = results.filter(r => r.status === 'fulfilled').length;
   console.log(`[PUSH] Sent to ${sent}/${subscriptions.length} subscribers — ${signal} @ ${confidence}%`);
   res.json({ ok: true, sent });
+});
+
+// The tool posts its latest signal here after each analysis
+app.post('/api/signal', (req, res) => {
+  const signal = req.body;
+  if (!signal || !signal.signal) return res.status(400).json({ error: 'Missing signal' });
+  lastSignal = { ...signal, timestamp: Date.now() };
+  console.log('[SIGNAL] Updated:', signal.signal, signal.confidence + '%');
+  res.json({ ok: true });
+});
+
+// Bot polls this to get the latest signal
+app.get('/api/signal', (req, res) => {
+  if (!lastSignal) return res.status(404).json({ error: 'No signal yet — run analysis on the tool first' });
+  // Only return signals less than 10 minutes old
+  const age = (Date.now() - lastSignal.timestamp) / 1000 / 60;
+  if (age > 10) return res.status(404).json({ error: 'Signal too old (' + age.toFixed(1) + 'min) — run analysis again' });
+  res.json(lastSignal);
 });
 
 // Health check for Render
